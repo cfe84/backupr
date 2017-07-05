@@ -34,9 +34,10 @@ const nttStore = async (adapter) => {
       const iterator = {
         next: async () => {
           const done = i >= photosDownloadQueue.length;
-          let photoEntity, content;
+          let content;
           if (!done) {
-            photoEntity = await photosDownloadQueueResource.getEntity(photosDownloadQueue[i]);
+            const photoId = photosDownloadQueue[i];
+            const photoEntity = await photosDownloadQueueResource.getEntity(photoId);
             content = await photoEntity.load();
           }
           const element = {
