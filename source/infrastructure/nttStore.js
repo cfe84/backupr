@@ -1,12 +1,15 @@
 const ntt = require("nttjs");
+const mediaType = require("../domain/enum/mediaType");
 
 const keys = {
-  mediaById: "mediaById"
+  mediaById: "mediaById",
+  photosDownloadQueue: "photosDownloadQueue"
 };
 
 const nttStore = async (adapter) => {
   const rootEntity = await ntt.entity(adapter);
   const mediaByIdResource = await rootEntity.createResource(keys.mediaById);
+  const photosDownloadQueueResource = await rootEntity.createResource(keys.photosDownloadQueue);
 
   const updateMedia = (media) => {
     media.status = {
@@ -18,8 +21,33 @@ const nttStore = async (adapter) => {
   const store = {
     addMedia: async (mediaData) => {
       mediaData = updateMedia(mediaData);
-      const entity = await mediaByIdResource.createEntity(mediaData.id);
-      await entity.save(mediaData);
+      const mediaByIdEntity = await mediaByIdResource.createEntity(mediaData.id);
+      await mediaByIdEntity.save(mediaData);
+      if (mediaData.type === mediaType.photo) {
+        const photoQueue = await photosDownloadQueueResource.createEntity(mediaData.id);
+        photoQueue.save(mediaData);
+      }
+    },
+    getPhotosDownloadQueueIterator: async () => {
+      const photosDownloadQueue = await photosDownloadQueueResource.listEntities();
+      let i = 0;
+      const iterator = {
+        next: async () => {
+          const done = i >= photosDownloadQueue.length;
+          let photoEntity, content;
+          if (!done) {
+            photoEntity = await photosDownloadQueueResource.getEntity(photosDownloadQueue[i]);
+            content = await photoEntity.load();
+          }
+          const element = {
+            value: content,
+            done: done
+          };
+          i++;
+          return element;
+        }
+      };
+      return iterator;
     }
   };
   return store;
