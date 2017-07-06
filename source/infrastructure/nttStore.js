@@ -29,22 +29,18 @@ const nttStore = async (adapter) => {
       }
     },
     getPhotosDownloadQueueIterator: async () => {
-      const photosDownloadQueue = await photosDownloadQueueResource.listEntities();
-      let i = 0;
+      const photosDownloadIterator = await photosDownloadQueueResource.iterateEntities();
       const iterator = {
         next: async () => {
-          const done = i >= photosDownloadQueue.length;
+          const {done, value} = await photosDownloadIterator.next();
           let content;
           if (!done) {
-            const photoId = photosDownloadQueue[i];
-            const photoEntity = await photosDownloadQueueResource.getEntity(photoId);
-            content = await photoEntity.load();
+            content = await value.load();
           }
           const element = {
             value: content,
             done: done
           };
-          i++;
           return element;
         }
       };

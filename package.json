@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "mocha": "^3.4.2",
-    "nttjs": "^1.0.1",
+    "nttjs": "^1.3.0",
     "should": "^11.2.1"
   }
 }
